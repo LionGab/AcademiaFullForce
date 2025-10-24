@@ -1,0 +1,103 @@
+# Redireciona tráfego HTTP para HTTPS
+[[redirects]]
+  from = "http://fullforceacademia.com.br/*"
+  to = "https://fullforceacademia.com.br/:splat"
+  status = 301
+  force = true
+
+# Redireciona www para non-www
+[[redirects]]
+  from = "https://www.fullforceacademia.com.br/*"
+  to = "https://fullforceacademia.com.br/:splat"
+  status = 301
+  force = true
+
+# SPA routing - todas as rotas servem index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de Segurança e Performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.google-analytics.com https://wa.me; frame-ancestors 'none';"
+
+# Cache de Imagens (1 ano)
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache de Assets JS/CSS (1 ano)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache de Fontes (1 ano)
+[[headers]]
+  for = "*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "*.woff"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+# Sem cache para HTML
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Compressão Brotli e Gzip
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Encoding = "br"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Content-Encoding = "br"
+
+# Build settings
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Plugin de otimização
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+  [plugins.inputs]
+    output_path = "lighthouse-reports"
+
+[[plugins]]
+  package = "netlify-plugin-image-optim"
+
+# Prerender para melhor SEO
+[[plugins]]
+  package = "@netlify/plugin-sitemap"
+
+  [plugins.inputs]
+    buildDir = "dist"
+    exclude = [
+      '/404.html',
+      '/admin/**'
+    ]
